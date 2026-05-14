@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHAAFICI MUSIC - Downloader</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b0f;
+    --surface: #0e1318;
+    --card: #131920;
+    --border: #1e2830;
+    --accent: #00e5ff;
+    --accent2: #7c4dff;
+    --accent3: #ff6d3b;
+    --text: #e8f0f8;
+    --muted: #4a6070;
+    --success: #00e676;
+    --error: #ff5252;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .blob1, .blob2 {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.12;
+  }
+  .blob1 { width: 350px; height: 350px; background: var(--accent2); top: -80px; left: -80px; animation: b1 8s ease-in-out infinite alternate; }
+  .blob2 { width: 250px; height: 250px; background: var(--accent); bottom: -40px; right: -40px; animation: b2 10s ease-in-out infinite alternate; }
+  @keyframes b1 { from{transform:translate(0,0)} to{transform:translate(50px,40px)} }
+  @keyframes b2 { from{transform:translate(0,0)} to{transform:translate(-40px,-50px)} }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 16px 100px;
+  }
+
+  header {
+    padding: 32px 0 24px;
+    text-align: center;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 17px;
+    box-shadow: 0 0 20px rgba(0,229,255,0.3);
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .tagline {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Premium Banner */
+  .premium-banner {
+    background: linear-gradient(135deg, rgba(124,77,255,0.15), rgba(0,229,255,0.1));
+    border: 1px solid rgba(124,77,255,0.3);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .premium-banner-text { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .premium-banner-text strong { color: var(--accent2); font-family: 'Syne', sans-serif; }
+
+  .premium-plans {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .plan-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .plan-card {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .plan-card:hover, .plan-card.best {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.05);
+  }
+
+  .plan-card.best { border-color: var(--accent2); }
+
+  .plan-badge {
+    font-size: 9px;
+    background: var(--accent2);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 99px;
+    margin-bottom: 4px;
+    display: inline-block;
+  }
+
+  .plan-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .plan-price {
+    font-size: 18px;
+    font-weight: 800;
+    font-family: 'Syne', sans-serif;
+    color: var(--accent);
+    margin: 4px 0 2px;
+  }
+
+  .plan-price span { font-size: 11px; color: var(--muted); }
+
+  .plan-days { font-size: 10px; color: var(--muted); }
+
+  .plan-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  /* Nav tabs */
+  .nav-tabs {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 20px;
+    gap: 4px;
+  }
+
+  .nav-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.2s;
+  }
+
+  .nav-tab.active {
+    background: var(--card);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    box-shadow: 0 0 12px rgba(0,229,255,0.1);
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .platforms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 18px;
+  }
+
+  .platform-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .platform-pill:hover, .platform-pill.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,0.05);
+  }
+
+  .platform-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .input-wrap { position: relative; margin-bottom: 14px; }
+
+  .url-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 15px 55px 15px 15px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .url-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,0.08); }
+  .url-input::placeholder { color: var(--muted); }
+
+  .paste-btn {
+    position: absolute;
+    right: 10px; top: 50%;
+    transform: translateY(-50%);
+    background: var(--border);
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.2s;
+  }
+
+  .paste-btn:hover { color: var(--accent); }
+
+  .type-toggle { display: flex; gap: 8px; margin-bottom: 18px; }
+
+  .type-btn {
+    flex: 1;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .type-btn.active {
+    background: rgba(0,229,255,0.08);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Limit bar */
+  .limit-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .limit-info { font-size: 11px; color: var(--muted); }
+  .limit-info strong { color: var(--text); }
+
+  .limit-track {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .limit-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success), var(--accent));
+    border-radius: 99px;
+    transition: width 0.5s;
+  }
+
+  .dl-btn {
+    width: 100%;
+    padding: 17px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 14px;
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dl-btn::after { content:''; position:absolute; inset:0; background:white; opacity:0; transition:opacity 0.2s; }
+  .dl-btn:hover::after { opacity: 0.08; }
+  .dl-btn:active { transform: scale(0.98); }
+  .dl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .progress-wrap { display: none; margin-top: 14px; }
+  .progress-wrap.show { display: block; }
+
+  .progress-bar-bg { background: var(--surface); border-radius: 99px; height: 4px; overflow: hidden; margin-bottom: 8px; }
+
+  .progress-bar {
+    height: 100%;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.3s;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  @keyframes shimmer { 0%{background-position:200% center} 100%{background-position:-200% center} }
+
+  .progress-text { font-size: 11px; color: var(--muted); text-align: center; }
+
+  .result-card {
+    display: none;
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 14px;
+    animation: fadeUp 0.3s ease;
+  }
+
+  .result-card.show { display: block; }
+  .result-card.success { background: rgba(0,230,118,0.06); border: 1px solid rgba(0,230,118,0.25); }
+  .result-card.error { background: rgba(255,82,82,0.06); border: 1px solid rgba(255,82,82,0.25); }
+  .result-card.warn { background: rgba(255,180,0,0.06); border: 1px solid rgba(255,180,0,0.25); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  .result-title { font-size: 13px; margin-bottom: 8px; font-family: 'Syne', sans-serif; font-weight: 700; }
+  .result-card.success .result-title { color: var(--success); }
+  .result-card.error .result-title { color: var(--error); }
+  .result-card.warn .result-title { color: #ffb400; }
+
+  .result-info { font-size: 11px; color: var(--muted); margin-bottom: 12px; line-height: 1.7; }
+
+  .save-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 12px;
+    background: var(--success);
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .save-btn:hover { opacity: 0.9; }
+
+  /* History */
+  .history-wrap { display: none; }
+
+  .stats-bar { display: flex; gap: 8px; margin-bottom: 14px; }
+
+  .stat-chip {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .history-empty { text-align: center; padding: 50px 20px; color: var(--muted); }
+  .history-empty .empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+  .history-empty p { font-size: 12px; }
+
+  .history-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px 15px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    animation: fadeUp 0.2s ease;
+  }
+
+  .history-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .history-icon.video { background: rgba(124,77,255,0.15); }
+  .history-icon.audio { background: rgba(0,229,255,0.15); }
+  .history-icon.photo { background: rgba(255,109,59,0.15); }
+
+  .history-info { flex: 1; min-width: 0; }
+  .history-title { font-size: 12px; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-meta { font-size: 10px; color: var(--muted); display: flex; gap: 8px; }
+  .history-badge { padding: 2px 8px; border-radius: 99px; font-size: 10px; border: 1px solid var(--border); color: var(--muted); }
+
+  .clear-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+
+  .clear-btn:hover { border-color: var(--error); color: var(--error); }
+
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .loading .spinner { display: block; }
+  .loading .btn-text { display: none; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<div class="blob1"></div>
+<div class="blob2"></div>
+
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🎵</div>
+      <div class="logo-text">SHAAFICI MUSIC</div>
+    </div>
+    <div class="tagline">Video & Audio Downloader</div>
+  </header>
+
+  <!-- Premium Banner -->
+  <div class="premium-banner" id="premiumBanner">
+    <div style="width:100%">
+      <div class="premium-banner-text">
+        <strong>⭐ Upgrade to Premium</strong><br>
+        Unlimited downloads · Dhammaan platforms
+      </div>
+      <div class="plan-row" style="margin-top:10px">
+        <div class="plan-card" onclick="buyPlan('monthly')">
+          <div class="plan-name">Monthly</div>
+          <div class="plan-price">99 <span>⭐</span></div>
+          <div class="plan-days">30 maalmood</div>
+          <button class="plan-btn">Buy Now</button>
+        </div>
+        <div class="plan-card best" onclick="buyPlan('yearly')">
+          <div class="plan-badge">BEST VALUE</div>
+          <div class="plan-name">Yearly</div>
+          <div class="plan-price">299 <span>⭐</span></div>
+          <div class="plan-days">365 maalmood</div>
+          <button class="plan-btn">Buy Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('download')">⬇ Download</button>
+    <button class="nav-tab" onclick="switchTab('history')">🕒 History</button>
+    <button class="nav-tab" onclick="switchTab('premium')">⭐ Premium</button>
+  </div>
+
+  <!-- DOWNLOAD TAB -->
+  <div id="tab-download">
+
+    <!-- Daily Limit Bar -->
+    <div class="limit-bar">
+      <div class="limit-info">
+        <strong id="limitUsed">0</strong>/5 <span>downloads today</span>
+      </div>
+      <div class="limit-track">
+        <div class="limit-fill" id="limitFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">// Platform</div>
+      <div class="platforms">
+        <div class="platform-pill active" data-platform="tiktok"><span class="dot"></span> TikTok</div>
+        <div class="platform-pill" data-platform="youtube"><span class="dot"></span> YouTube</div>
+        <div class="platform-pill" data-platform="instagram"><span class="dot"></span> Instagram</div>
+        <div class="platform-pill" data-platform="facebook"><span class="dot"></span> Facebook</div>
+      </div>
+
+      <div class="card-label">// Link</div>
+      <div class="input-wrap">
+        <input class="url-input" id="urlInput" type="url" placeholder="https://www.tiktok.com/..." autocomplete="off" spellcheck="false"/>
+        <button class="paste-btn" onclick="pasteURL()">PASTE</button>
+      </div>
+
+      <div class="card-label">// Type</div>
+      <div class="type-toggle">
+        <button class="type-btn active" id="btn-video" onclick="setType('video')">🎥 Video</button>
+        <button class="type-btn" id="btn-audio" onclick="setType('audio')">🎵 MP3</button>
+      </div>
+
+      <button class="dl-btn" id="dlBtn" onclick="startDownload()">
+        <span class="btn-text">⬇ Download Now</span>
+        <div class="spinner"></div>
+      </button>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">Connecting...</div>
+      </div>
+
+      <div class="result-card" id="resultCard">
+        <div class="result-title" id="resultTitle"></div>
+        <div class="result-info" id="resultInfo"></div>
+        <a id="saveLink" style="text-decoration:none;display:none">
+          <button class="save-btn">💾 Save File</button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="tab-history" class="history-wrap">
+    <div class="stats-bar">
+      <div class="stat-chip">
+        <div class="stat-num" id="h-total">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-chip">
+        <div class="stat-num" id="h-today">0</div>
+        <div class="stat-label">Today</div>
+      </div>
+      <div class="stat-chip">
+        <div class="stat-num" id="h-audio">0</div>
+        <div class="stat-label">Audio</div>
+      </div>
+    </div>
+    <div id="historyList"></div>
+    <button class="clear-btn" onclick="clearHistory()">🗑 Clear History</button>
+  </div>
+
+  <!-- PREMIUM TAB -->
+  <div id="tab-premium" style="display:none">
+    <div class="card">
+      <div class="card-label">// Choose Your Plan</div>
+
+      <div style="display:flex; gap:10px; margin-bottom:16px">
+
+        <div class="plan-card" style="flex:1; padding:16px" onclick="buyPlan('monthly')">
+          <div class="plan-name" style="font-size:15px">Monthly</div>
+          <div class="plan-price" style="font-size:28px">99 <span style="font-size:14px">⭐ Stars</span></div>
+          <div class="plan-days" style="margin-bottom:10px">30 maalmood</div>
+          <div style="font-size:11px; color:var(--muted); line-height:1.7; margin-bottom:12px">
+            ✅ Unlimited downloads<br>
+            ✅ Dhammaan platforms<br>
+            ✅ Priority speed
+          </div>
+          <button class="plan-btn" style="font-size:13px; padding:10px">Buy Monthly</button>
+        </div>
+
+        <div class="plan-card best" style="flex:1; padding:16px" onclick="buyPlan('yearly')">
+          <div class="plan-badge" style="font-size:10px; padding:3px 8px">BEST VALUE</div>
+          <div class="plan-name" style="font-size:15px">Yearly</div>
+          <div class="plan-price" style="font-size:28px">299 <span style="font-size:14px">⭐ Stars</span></div>
+          <div class="plan-days" style="margin-bottom:10px">365 maalmood</div>
+          <div style="font-size:11px; color:var(--muted); line-height:1.7; margin-bottom:12px">
+            ✅ Unlimited downloads<br>
+            ✅ Dhammaan platforms<br>
+            ✅ Priority speed<br>
+            ✅ 3+ bilood bilaash!
+          </div>
+          <button class="plan-btn" style="font-size:13px; padding:10px">Buy Yearly</button>
+        </div>
+
+      </div>
+
+      <div style="font-size:11px; color:var(--muted); text-align:center; line-height:1.8">
+        🔒 Secured by Telegram Stars<br>
+        ⚡ Automatic activation<br>
+        💰 No hidden fees
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">// Free vs Premium</div>
+      <div style="font-size:12px; color:var(--muted); line-height:2.2;">
+        <div style="display:flex; justify-content:space-between">
+          <span>Daily Downloads</span>
+          <span><span style="color:var(--error)">5/day</span> → <span style="color:var(--success)">Unlimited</span></span>
+        </div>
+        <div style="display:flex; justify-content:space-between">
+          <span>TikTok Videos</span>
+          <span><span style="color:var(--success)">✅</span> → <span style="color:var(--success)">✅</span></span>
+        </div>
+        <div style="display:flex; justify-content:space-between">
+          <span>YouTube MP3</span>
+          <span><span style="color:var(--error)">❌</span> → <span style="color:var(--success)">✅</span></span>
+        </div>
+        <div style="display:flex; justify-content:space-between">
+          <span>Instagram</span>
+          <span><span style="color:var(--error)">❌</span> → <span style="color:var(--success)">✅</span></span>
+        </div>
+        <div style="display:flex; justify-content:space-between">
+          <span>Priority Speed</span>
+          <span><span style="color:var(--error)">❌</span> → <span style="color:var(--success)">✅</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Telegram WebApp init
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
+
+  // ── State ─────────────────────────────────────────
+  let downloadType = 'video';
+  let dlHistory = JSON.parse(localStorage.getItem('dlHistory') || '[]');
+  let dailyUsed = parseInt(localStorage.getItem('dailyUsed') || '0');
+  const FREE_LIMIT = 5;
+
+  // Reset daily on new day
+  const lastDay = localStorage.getItem('lastDay');
+  const today = new Date().toDateString();
+  if (lastDay !== today) {
+    dailyUsed = 0;
+    localStorage.setItem('dailyUsed', '0');
+    localStorage.setItem('lastDay', today);
+  }
+
+  updateLimitBar();
+  updateStats();
+
+  // ── Tab Switch ────────────────────────────────────
+  function switchTab(tab) {
+    const tabs = ['download', 'history', 'premium'];
+    tabs.forEach((t, i) => {
+      document.querySelectorAll('.nav-tab')[i].classList.toggle('active', t === tab);
+    });
+    document.getElementById('tab-download').style.display = tab === 'download' ? '' : 'none';
+    document.getElementById('tab-history').style.display = tab === 'history' ? 'block' : 'none';
+    document.getElementById('tab-premium').style.display = tab === 'premium' ? 'block' : 'none';
+    if (tab === 'history') renderHistory();
+  }
+
+  // ── Platform ──────────────────────────────────────
+  document.querySelectorAll('.platform-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.platform-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const ph = {
+        tiktok: 'https://www.tiktok.com/...',
+        youtube: 'https://www.youtube.com/watch?v=...',
+        instagram: 'https://www.instagram.com/p/...',
+        facebook: 'https://www.facebook.com/...',
+      };
+      document.getElementById('urlInput').placeholder = ph[pill.dataset.platform];
+    });
+  });
+
+  // ── Type ──────────────────────────────────────────
+  function setType(type) {
+    downloadType = type;
+    document.getElementById('btn-video').classList.toggle('active', type === 'video');
+    document.getElementById('btn-audio').classList.toggle('active', type === 'audio');
+  }
+
+  // ── Paste ─────────────────────────────────────────
+  async function pasteURL() {
+    try {
+      const text = await navigator.clipboard.readText();
+      document.getElementById('urlInput').value = text;
+      autoDetect(text);
+    } catch { document.getElementById('urlInput').focus(); }
+  }
+
+  function autoDetect(url) {
+    const map = {
+      tiktok: /tiktok\.com|vt\.tiktok/,
+      youtube: /youtube\.com|youtu\.be/,
+      instagram: /instagram\.com/,
+      facebook: /facebook\.com|fb\.watch/,
+    };
+    for (const [p, r] of Object.entries(map)) {
+      if (r.test(url)) {
+        document.querySelectorAll('.platform-pill').forEach(pill => {
+          pill.classList.toggle('active', pill.dataset.platform === p);
+        });
+        break;
+      }
+    }
+  }
+
+  document.getElementById('urlInput').addEventListener('input', e => autoDetect(e.target.value));
+
+  // ── Limit Bar ─────────────────────────────────────
+  function updateLimitBar() {
+    const pct = Math.min((dailyUsed / FREE_LIMIT) * 100, 100);
+    document.getElementById('limitUsed').textContent = dailyUsed;
+    document.getElementById('limitFill').style.width = pct + '%';
+    document.getElementById('limitFill').style.background =
+      pct >= 100 ? 'var(--error)' :
+      pct >= 60 ? '#ffb400' :
+      'linear-gradient(90deg, var(--success), var(--accent))';
+  }
+
+  // ── Download ──────────────────────────────────────
+  async function startDownload() {
+    const url = document.getElementById('urlInput').value.trim();
+
+    if (!url) {
+      showResult('error', '❌ Link geli!', 'URL paste garso ka dibna download taabo.');
+      return;
+    }
+
+    if (dailyUsed >= FREE_LIMIT) {
+      showResult('warn', '⚠️ Daily Limit Dhammaatay!',
+        `Maanta ${FREE_LIMIT} downloads ayaad isticmaashay.\n\n⭐ Premium si unlimited u hel:\n• Monthly: 99 Stars\n• Yearly: 299 Stars`
+      );
+      return;
+    }
+
+    const btn = document.getElementById('dlBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    document.getElementById('progressWrap').classList.add('show');
+    document.getElementById('resultCard').classList.remove('show');
+
+    const steps = [
+      [20, 'Connecting...'],
+      [45, 'Fetching media...'],
+      [70, 'Processing...'],
+      [90, 'Preparing file...'],
+      [100, 'Done!'],
+    ];
+
+    for (const [p, t] of steps) {
+      await sleep(400 + Math.random() * 300);
+      setProgress(p, t);
+    }
+
+    await sleep(200);
+
+    const platform = document.querySelector('.platform-pill.active')?.dataset.platform || 'unknown';
+
+    try {
+      let downloadUrl = null, title = '', mediaType = downloadType;
+
+      if (platform === 'tiktok') {
+        const res = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+
+        if (data.code === 0) {
+          const isPhoto = data.data.images?.length > 0;
+          if (downloadType === 'audio') {
+            downloadUrl = data.data.music;
+            title = data.data.music_info?.title || 'TikTok Audio';
+            mediaType = 'audio';
+          } else if (isPhoto) {
+            downloadUrl = data.data.images[0];
+            title = 'TikTok Photo';
+            mediaType = 'photo';
+          } else {
+            downloadUrl = data.data.play;
+            title = data.data.title || 'TikTok Video';
+            mediaType = 'video';
+          }
+        } else {
+          throw new Error('TikTok link khalad - URL hubi');
+        }
+      } else {
+        throw new Error(`${platform.toUpperCase()} - Bot-ka isticmaal ama Premium hel`);
+      }
+
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      document.getElementById('progressWrap').classList.remove('show');
+
+      if (downloadUrl) {
+        dailyUsed++;
+        localStorage.setItem('dailyUsed', dailyUsed.toString());
+        updateLimitBar();
+
+        addToHistory({ url, title, platform, type: mediaType, downloadUrl, date: new Date().toISOString() });
+        updateStats();
+
+        const saveLink = document.getElementById('saveLink');
+        saveLink.href = downloadUrl;
+        saveLink.download = title;
+        saveLink.style.display = 'block';
+
+        showResult('success', `✓ ${mediaType === 'audio' ? '🎵' : mediaType === 'photo' ? '📸' : '🎥'} Diyaar!`,
+          `📌 ${title}\n🌐 ${platform.toUpperCase()} · ${mediaType.toUpperCase()}\n📅 ${new Date().toLocaleTimeString()}`
+        );
+      }
+
+    } catch (err) {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      document.getElementById('progressWrap').classList.remove('show');
+      showResult('error', '❌ Download Failed', err.message);
+    }
+  }
+
+  // ── Buy Plan (Telegram WebApp) ────────────────────
+  function buyPlan(type) {
+    if (tg) {
+      tg.sendData(JSON.stringify({ action: 'buy_premium', plan: type }));
+    } else {
+      alert(type === 'monthly'
+        ? '99 Stars - Monthly\nBot-ka ku bixii: /start'
+        : '299 Stars - Yearly\nBot-ka ku bixii: /start'
+      );
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function setProgress(pct, text) {
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent = text;
+  }
+
+  function showResult(type, title, info) {
+    const card = document.getElementById('resultCard');
+    card.className = `result-card show ${type}`;
+    document.getElementById('resultTitle').textContent = title;
+    document.getElementById('resultInfo').textContent = info;
+    if (type !== 'success') document.getElementById('saveLink').style.display = 'none';
+  }
+
+  // ── History ───────────────────────────────────────
+  function addToHistory(item) {
+    dlHistory.unshift(item);
+    if (dlHistory.length > 50) dlHistory = dlHistory.slice(0, 50);
+    localStorage.setItem('dlHistory', JSON.stringify(dlHistory));
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const todayStr = new Date().toDateString();
+    let todayCount = 0;
+    let audioCount = 0;
+
+    if (!dlHistory.length) {
+      list.innerHTML = `<div class="history-empty"><div class="empty-icon">📭</div><p>Download taarikh ma jirto weli</p></div>`;
+      document.getElementById('h-total').textContent = 0;
+      document.getElementById('h-today').textContent = 0;
+      document.getElementById('h-audio').textContent = 0;
+      return;
+    }
+
+    list.innerHTML = dlHistory.map(item => {
+      const d = new Date(item.date);
+      if (d.toDateString() === todayStr) todayCount++;
+      if (item.type === 'audio') audioCount++;
+      const icons = { video: '🎥', audio: '🎵', photo: '📸' };
+      const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const date = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return `
+        <div class="history-item">
+          <div class="history-icon ${item.type || 'video'}">${icons[item.type] || '🎥'}</div>
+          <div class="history-info">
+            <div class="history-title">${item.title || 'Unknown'}</div>
+            <div class="history-meta">
+              <span>${(item.platform || '').toUpperCase()}</span>
+              <span>${date} ${time}</span>
+            </div>
+          </div>
+          <span class="history-badge">${(item.type || 'video').toUpperCase()}</span>
+        </div>`;
+    }).join('');
+
+    document.getElementById('h-total').textContent = dlHistory.length;
+    document.getElementById('h-today').textContent = todayCount;
+    document.getElementById('h-audio').textContent = audioCount;
+  }
+
+  function clearHistory() {
+    if (confirm('Taariikhda dhammaan tirtir?')) {
+      dlHistory = [];
+      localStorage.setItem('dlHistory', '[]');
+      renderHistory();
+      updateStats();
+    }
+  }
+
+  function updateStats() {
+    renderHistory();
+  }
+</script>
+</body>
+  </html>
