@@ -1,4 +1,4 @@
-cat > /tmp/downloader.html << 'EOF'
+cat > /mnt/user-data/outputs/downloader.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,11 +8,7 @@ cat > /tmp/downloader.html << 'EOF'
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#080b0f;--surface:#0e1318;--card:#131920;--border:#1e2830;
-  --accent:#00e5ff;--accent2:#7c4dff;--text:#e8f0f8;--muted:#4a6070;
-  --success:#00e676;--error:#ff5252;
-}
+:root{--bg:#080b0f;--surface:#0e1318;--card:#131920;--border:#1e2830;--accent:#00e5ff;--accent2:#7c4dff;--text:#e8f0f8;--muted:#4a6070;--success:#00e676;--error:#ff5252;}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
@@ -56,7 +52,7 @@ header{padding:32px 0 24px;text-align:center}
 .progress-wrap{display:none;margin-top:14px}
 .progress-wrap.show{display:block}
 .progress-bar-bg{background:var(--surface);border-radius:99px;height:4px;overflow:hidden;margin-bottom:8px}
-.progress-bar{height:100%;border-radius:99px;width:0%;transition:width 0.3s;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));background-size:200% 100%;animation:shimmer 1.5s linear infinite}
+.progress-bar{height:100%;border-radius:99px;width:0%;transition:width 0.4s;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));background-size:200% 100%;animation:shimmer 1.5s linear infinite}
 @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
 .progress-text{font-size:11px;color:var(--muted);text-align:center}
 .result-card{display:none;border-radius:14px;padding:16px;margin-top:14px;animation:fadeUp 0.3s ease}
@@ -65,11 +61,17 @@ header{padding:32px 0 24px;text-align:center}
 .result-card.error{background:rgba(255,82,82,0.06);border:1px solid rgba(255,82,82,0.25)}
 .result-card.warn{background:rgba(255,180,0,0.06);border:1px solid rgba(255,180,0,0.25)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.result-title{font-size:13px;margin-bottom:8px;font-family:'Syne',sans-serif;font-weight:700}
+.result-title{font-size:14px;margin-bottom:6px;font-family:'Syne',sans-serif;font-weight:700}
 .result-card.success .result-title{color:var(--success)}
 .result-card.error .result-title{color:var(--error)}
 .result-card.warn .result-title{color:#ffb400}
-.result-info{font-size:11px;color:var(--muted);line-height:1.8;white-space:pre-line}
+.result-info{font-size:11px;color:var(--muted);line-height:1.8;white-space:pre-line;margin-bottom:14px}
+.gallery-btn{width:100%;padding:16px;background:linear-gradient(135deg,#00e676,#00bcd4);border:none;border-radius:12px;color:#000;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;cursor:pointer;display:none;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;box-shadow:0 0 20px rgba(0,230,118,0.3);animation:gpulse 2s ease-in-out infinite}
+@keyframes gpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,230,118,0.4),0 0 20px rgba(0,230,118,0.2)}50%{box-shadow:0 0 0 8px rgba(0,230,118,0),0 0 30px rgba(0,230,118,0.4)}}
+.gallery-btn.show{display:flex}
+.share-btn{width:100%;padding:12px;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.3);border-radius:10px;color:var(--accent);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
+.share-btn.show{display:flex}
+.share-btn:hover{background:rgba(0,229,255,0.15)}
 .stats-bar{display:flex;gap:8px;margin-bottom:14px}
 .stat-chip{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
 .stat-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--accent)}
@@ -132,6 +134,7 @@ header{padding:32px 0 24px;text-align:center}
     <div class="limit-info"><strong id="limitUsed">0</strong>/5 downloads today</div>
     <div class="limit-track"><div class="limit-fill" id="limitFill" style="width:0%"></div></div>
   </div>
+
   <div class="card">
     <div class="card-label">// Platform</div>
     <div class="platforms">
@@ -161,8 +164,15 @@ header{padding:32px 0 24px;text-align:center}
     <div class="result-card" id="resultCard">
       <div class="result-title" id="resultTitle"></div>
       <div class="result-info" id="resultInfo"></div>
+      <button class="gallery-btn" id="galleryBtn" onclick="saveToGallery()">
+        📸 Save to Gallery
+      </button>
+      <button class="share-btn" id="shareBtn" onclick="shareFile()">
+        📤 Share / Open in App
+      </button>
     </div>
   </div>
+
   <div class="card">
     <div class="card-label">// How to Use</div>
     <div style="font-size:12px;color:var(--muted);line-height:2.2">
@@ -170,7 +180,7 @@ header{padding:32px 0 24px;text-align:center}
       2. Link paste garso 🔗<br>
       3. Video ama MP3 dooro 🎵<br>
       4. Download Now taabo ⬇<br>
-      5. File automatic gallery ugu dhacaa ✅
+      5. 📸 Save to Gallery taabo ✅
     </div>
   </div>
 </div>
@@ -195,9 +205,7 @@ header{padding:32px 0 24px;text-align:center}
         <div class="plan-name">Monthly</div>
         <div class="plan-price">99 <span>⭐</span></div>
         <div class="plan-days">30 maalmood</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:10px">
-          ✅ Unlimited downloads<br>✅ All platforms<br>✅ Fast speed
-        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:10px">✅ Unlimited downloads<br>✅ All platforms<br>✅ Fast speed</div>
         <button class="plan-btn">Buy Monthly</button>
       </div>
       <div class="plan-card best" onclick="buyPlan('yearly')">
@@ -205,15 +213,11 @@ header{padding:32px 0 24px;text-align:center}
         <div class="plan-name">Yearly</div>
         <div class="plan-price">299 <span>⭐</span></div>
         <div class="plan-days">365 maalmood</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:10px">
-          ✅ Unlimited downloads<br>✅ All platforms<br>✅ Save 3+ months!
-        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:10px">✅ Unlimited downloads<br>✅ All platforms<br>✅ Save 3+ months!</div>
         <button class="plan-btn">Buy Yearly</button>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2">
-      🔒 Secured by Telegram Stars<br>⚡ Automatic activation<br>💰 No hidden fees
-    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2">🔒 Secured by Telegram Stars<br>⚡ Automatic activation<br>💰 No hidden fees</div>
   </div>
   <div class="card">
     <div class="card-label">// Free vs Premium</div>
@@ -232,124 +236,92 @@ header{padding:32px 0 24px;text-align:center}
 const tg = window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();}
 
-// ── RAILWAY SERVER URL ──────────────────────────────
 const SERVER = "https://shaafici-downloader-production.up.railway.app";
 
-// ── State ───────────────────────────────────────────
 let downloadType = 'video';
 let dlHistory = JSON.parse(localStorage.getItem('dlHistory')||'[]');
 let dailyUsed = parseInt(localStorage.getItem('dailyUsed')||'0');
 const FREE_LIMIT = 5;
+let currentBlob = null;
+let currentFilename = '';
+
 const lastDay = localStorage.getItem('lastDay');
 const today = new Date().toDateString();
 if(lastDay !== today){
-  dailyUsed = 0;
+  dailyUsed=0;
   localStorage.setItem('dailyUsed','0');
   localStorage.setItem('lastDay',today);
 }
 updateLimitBar();
 
-// ── Tab Switch ──────────────────────────────────────
 function switchTab(tab){
   ['download','history','premium'].forEach((t,i)=>{
     document.querySelectorAll('.nav-tab')[i].classList.toggle('active',t===tab);
-    document.getElementById('tab-'+t).style.display = t===tab?'block':'none';
+    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
   });
   if(tab==='history') renderHistory();
 }
 
-// ── Platform Pills ──────────────────────────────────
 document.querySelectorAll('.platform-pill').forEach(pill=>{
   pill.addEventListener('click',()=>{
     document.querySelectorAll('.platform-pill').forEach(p=>p.classList.remove('active'));
     pill.classList.add('active');
-    const ph={
-      tiktok:'https://www.tiktok.com/...',
-      youtube:'https://www.youtube.com/watch?v=...',
-      instagram:'https://www.instagram.com/p/...',
-      facebook:'https://www.facebook.com/...'
-    };
+    const ph={tiktok:'https://www.tiktok.com/...',youtube:'https://www.youtube.com/watch?v=...',instagram:'https://www.instagram.com/p/...',facebook:'https://www.facebook.com/...'};
     document.getElementById('urlInput').placeholder=ph[pill.dataset.platform];
   });
 });
 
-// ── Type Toggle ─────────────────────────────────────
 function setType(type){
   downloadType=type;
   document.getElementById('btn-video').classList.toggle('active',type==='video');
   document.getElementById('btn-audio').classList.toggle('active',type==='audio');
 }
 
-// ── Paste ───────────────────────────────────────────
 async function pasteURL(){
-  try{
-    const text = await navigator.clipboard.readText();
-    document.getElementById('urlInput').value=text;
-    autoDetect(text);
-  }catch{document.getElementById('urlInput').focus();}
+  try{const text=await navigator.clipboard.readText();document.getElementById('urlInput').value=text;autoDetect(text);}
+  catch{document.getElementById('urlInput').focus();}
 }
 
 function autoDetect(url){
-  const map={
-    tiktok:/tiktok\.com|vt\.tiktok/,
-    youtube:/youtube\.com|youtu\.be/,
-    instagram:/instagram\.com/,
-    facebook:/facebook\.com|fb\.watch/
-  };
+  const map={tiktok:/tiktok\.com|vt\.tiktok/,youtube:/youtube\.com|youtu\.be/,instagram:/instagram\.com/,facebook:/facebook\.com|fb\.watch/};
   for(const[p,r] of Object.entries(map)){
-    if(r.test(url)){
-      document.querySelectorAll('.platform-pill').forEach(pill=>pill.classList.toggle('active',pill.dataset.platform===p));
-      break;
-    }
+    if(r.test(url)){document.querySelectorAll('.platform-pill').forEach(pill=>pill.classList.toggle('active',pill.dataset.platform===p));break;}
   }
 }
-
 document.getElementById('urlInput').addEventListener('input',e=>autoDetect(e.target.value));
 
-// ── Limit Bar ───────────────────────────────────────
 function updateLimitBar(){
   const pct=Math.min((dailyUsed/FREE_LIMIT)*100,100);
   document.getElementById('limitUsed').textContent=dailyUsed;
   document.getElementById('limitFill').style.width=pct+'%';
-  document.getElementById('limitFill').style.background=
-    pct>=100?'var(--error)':pct>=60?'#ffb400':'linear-gradient(90deg,var(--success),var(--accent))';
+  document.getElementById('limitFill').style.background=pct>=100?'var(--error)':pct>=60?'#ffb400':'linear-gradient(90deg,var(--success),var(--accent))';
 }
 
-// ── DOWNLOAD ────────────────────────────────────────
 async function startDownload(){
   const url=document.getElementById('urlInput').value.trim();
   if(!url){showResult('error','❌ Link geli!','URL paste garso.');return;}
-  if(dailyUsed>=FREE_LIMIT){
-    showResult('warn','⚠️ Daily Limit!','Maanta 5 downloads ayaad isticmaashay.\n\n⭐ Premium hel:\n• Monthly: 99 Stars\n• Yearly: 299 Stars');
-    return;
-  }
+  if(dailyUsed>=FREE_LIMIT){showResult('warn','⚠️ Daily Limit!','Maanta 5 downloads ayaad isticmaashay.\n\n⭐ Premium hel:\n• Monthly: 99 Stars\n• Yearly: 299 Stars');return;}
 
   const btn=document.getElementById('dlBtn');
-  btn.disabled=true;
-  btn.classList.add('loading');
+  btn.disabled=true;btn.classList.add('loading');
   document.getElementById('progressWrap').classList.add('show');
   document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('galleryBtn').classList.remove('show');
+  document.getElementById('shareBtn').classList.remove('show');
+  currentBlob=null;
 
   try{
-    setProgress(20,'Connecting to server...');
-    await sleep(300);
-    setProgress(45,'Fetching media...');
+    setProgress(15,'Connecting...');await sleep(200);
+    setProgress(40,'Fetching media...');
 
-    const response = await fetch(`${SERVER}/download`,{
+    const response=await fetch(`${SERVER}/download`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:url,type:downloadType})
+      body:JSON.stringify({url,type:downloadType})
     });
 
-    setProgress(75,'Downloading...');
-
-    if(!response.ok){
-      const err=await response.json().catch(()=>({error:'Server khalad'}));
-      throw new Error(err.error||'Server khalad');
-    }
-
-    setProgress(92,'Preparing file...');
-    await sleep(200);
+    setProgress(72,'Downloading...');
+    if(!response.ok){const e=await response.json().catch(()=>({error:'Server khalad'}));throw new Error(e.error||'Server khalad');}
 
     const disposition=response.headers.get('Content-Disposition')||'';
     let filename='shaafici_'+Date.now();
@@ -357,20 +329,13 @@ async function startDownload(){
     if(match) filename=match[1];
     else filename+=downloadType==='audio'?'.mp3':'.mp4';
 
+    setProgress(90,'Processing...');
     const blob=await response.blob();
-    const blobUrl=URL.createObjectURL(blob);
+    currentBlob=blob;
+    currentFilename=filename;
 
-    setProgress(100,'Done! ✅');
-    await sleep(200);
-
-    // Automatic gallery save!
-    const a=document.createElement('a');
-    a.href=blobUrl;
-    a.download=filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(blobUrl),5000);
+    setProgress(100,'✅ Done!');
+    await sleep(300);
 
     dailyUsed++;
     localStorage.setItem('dailyUsed',dailyUsed.toString());
@@ -379,37 +344,92 @@ async function startDownload(){
     const platform=document.querySelector('.platform-pill.active')?.dataset.platform||'unknown';
     addToHistory({url,title:filename,platform,type:downloadType,date:new Date().toISOString()});
 
-    btn.disabled=false;
-    btn.classList.remove('loading');
+    btn.disabled=false;btn.classList.remove('loading');
     document.getElementById('progressWrap').classList.remove('show');
 
-    showResult('success','✅ Download Dhammaatay!',
-      `📁 ${filename}\n🌐 ${platform.toUpperCase()} · ${downloadType.toUpperCase()}\n\n💾 Gallery-gaaga ayuu ku dhacay!`
-    );
+    showResult('success','✅ Diyaar! Hadda keydi!',`📁 ${filename}\n🌐 ${platform.toUpperCase()} · ${downloadType.toUpperCase()}`);
+
+    // Show Save to Gallery button
+    document.getElementById('galleryBtn').classList.add('show');
+    document.getElementById('shareBtn').classList.add('show');
 
   }catch(err){
-    btn.disabled=false;
-    btn.classList.remove('loading');
+    btn.disabled=false;btn.classList.remove('loading');
     document.getElementById('progressWrap').classList.remove('show');
     showResult('error','❌ Khalad!',err.message||'Isku day mar kale.');
   }
 }
 
-// ── Premium ─────────────────────────────────────────
-function buyPlan(type){
-  if(tg){
-    tg.sendData(JSON.stringify({action:'buy_premium',plan:type}));
-  }else{
-    alert(type==='monthly'?'99 Stars Monthly\nBot-ka: /start':'299 Stars Yearly\nBot-ka: /start');
+// ── SAVE TO GALLERY ────────────────────────────────
+async function saveToGallery(){
+  if(!currentBlob){alert('File ma jirto, download hore u samee!');return;}
+
+  const isVideo = currentFilename.endsWith('.mp4')||currentFilename.endsWith('.mov')||currentFilename.endsWith('.webm');
+  const isAudio = currentFilename.endsWith('.mp3')||currentFilename.endsWith('.m4a');
+
+  // Method 1: Web Share API (Best for mobile - opens native share sheet)
+  if(navigator.share && navigator.canShare){
+    try{
+      const file = new File([currentBlob], currentFilename, {type: currentBlob.type});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({
+          files:[file],
+          title:'SHAAFICI MUSIC Download',
+          text:'Download from SHAAFICI MUSIC'
+        });
+        showResult('success','✅ Gallery ku keydi!','Share sheet ka "Save to Gallery" ama "Save Image/Video" dooro! ✅');
+        return;
+      }
+    }catch(e){
+      if(e.name!=='AbortError') console.log('Share failed:',e);
+      else return; // User cancelled
+    }
+  }
+
+  // Method 2: Direct download (fallback)
+  try{
+    const blobUrl=URL.createObjectURL(currentBlob);
+    const a=document.createElement('a');
+    a.href=blobUrl;
+    a.download=currentFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(blobUrl),5000);
+    showResult('success','✅ Download Started!','Files app → Downloads folder ka hubi! 📁');
+  }catch(e){
+    alert('Gallery save khalad: '+e.message);
   }
 }
 
-// ── Helpers ─────────────────────────────────────────
+// ── SHARE FILE ─────────────────────────────────────
+async function shareFile(){
+  if(!currentBlob){alert('File ma jirto!');return;}
+  try{
+    const file=new File([currentBlob],currentFilename,{type:currentBlob.type});
+    if(navigator.share){
+      await navigator.share({files:[file],title:'SHAAFICI MUSIC'});
+    }else{
+      const blobUrl=URL.createObjectURL(currentBlob);
+      window.open(blobUrl,'_blank');
+    }
+  }catch(e){
+    if(e.name!=='AbortError') alert('Share khalad: '+e.message);
+  }
+}
+
+function buyPlan(type){
+  if(tg){tg.sendData(JSON.stringify({action:'buy_premium',plan:type}));}
+  else{alert(type==='monthly'?'99 Stars Monthly\nBot-ka: /start':'299 Stars Yearly\nBot-ka: /start');}
+}
+
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
 function setProgress(pct,text){
   document.getElementById('progressBar').style.width=pct+'%';
   document.getElementById('progressText').textContent=text;
 }
+
 function showResult(type,title,info){
   const card=document.getElementById('resultCard');
   card.className=`result-card show ${type}`;
@@ -417,7 +437,6 @@ function showResult(type,title,info){
   document.getElementById('resultInfo').textContent=info;
 }
 
-// ── History ─────────────────────────────────────────
 function addToHistory(item){
   dlHistory.unshift(item);
   if(dlHistory.length>50) dlHistory=dlHistory.slice(0,50);
@@ -455,15 +474,10 @@ function renderHistory(){
 }
 
 function clearHistory(){
-  if(confirm('Taariikhda dhammaan tirtir?')){
-    dlHistory=[];
-    localStorage.setItem('dlHistory','[]');
-    renderHistory();
-  }
+  if(confirm('Taariikhda dhammaan tirtir?')){dlHistory=[];localStorage.setItem('dlHistory','[]');renderHistory();}
 }
 </script>
 </body>
 </html>
-EOF
-cp /tmp/downloader.html /mnt/user-data/outputs/downloader.html
+HTMLEOF
 echo "Done!"
